@@ -1,0 +1,41 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Курстар — Zerde{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="section-title fs-3 mb-1">Барлық курстар</h1>
+    <p class="text-muted mb-0">Өзіңізге керекті курсты таңдап, толық ақпаратын көріңіз.</p>
+  </div>
+  <a href="{% url 'portal:student_dashboard' %}" class="btn btn-soft">Кабинет</a>
+</div>
+
+<form class="mb-4" method="get">
+  <div class="input-group input-group-lg">
+    <input type="search" name="q" class="form-control" value="{{ search_query }}" placeholder="Курс атауы немесе сипаттама бойынша іздеу">
+    <button class="btn btn-gradient px-4" type="submit">Іздеу</button>
+  </div>
+</form>
+
+<div class="row g-4">
+  {% for course in courses %}
+    <div class="col-md-6 col-lg-4">
+      <div class="feature-card p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h2 class="h5 fw-bold mb-0">{{ course.title }}</h2>
+          <span class="badge rounded-pill text-bg-light">{{ course.price }} ₸</span>
+        </div>
+        <div class="text-muted small mb-2">Оқытушы: {{ course.teacher.user.full_name|default:course.teacher.user.username }}</div>
+        <p class="text-secondary flex-grow-1">{{ course.description|default:"Сипаттама жоқ."|truncatechars:130 }}</p>
+        <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft">Толық қарау</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info border-0 rounded-4">Курс табылмады.</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
+

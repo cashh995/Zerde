@@ -1,0 +1,232 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Курс тестін қосу — Zerde{% endblock %}
+
+{% block extra_css %}
+<style>
+  .test-builder-card {
+    border-radius: 24px;
+    border: 1px solid rgba(108, 99, 255, 0.12);
+    background: linear-gradient(150deg, rgba(108, 99, 255, 0.11), rgba(255, 101, 132, 0.07));
+    box-shadow: 0 20px 40px rgba(32, 42, 97, 0.13);
+  }
+  .question-card {
+    border-radius: 20px;
+    border: 1px solid rgba(108, 99, 255, 0.15);
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(108, 99, 255, 0.2);
+  }
+  .option-row {
+    border-radius: 14px;
+    background: #f8f9ff;
+    border: 1px solid rgba(108, 99, 255, 0.1);
+  }
+  .option-radio {
+    accent-color: #6C63FF;
+    width: 18px;
+    height: 18px;
+  }
+  .question-delete-btn {
+    border: 1px solid rgba(220, 53, 69, 0.35);
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  }
+  .question-delete-btn:hover {
+    transform: translateY(-2px);
+    background: rgba(220, 53, 69, 0.16);
+    box-shadow: 0 10px 22px rgba(220, 53, 69, 0.2);
+    color: #bb2d3b;
+  }
+  .question-delete-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex flex-wrap gap-2">
+  <a href="{% url 'portal:teacher_dashboard' %}" class="btn btn-soft">← Оқытушы панеліне қайту</a>
+</div>
+
+<div class="test-builder-card p-4 p-md-5">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="section-title fs-3 mb-1">Курс тестін құрастыру</h1>
+      <div class="text-muted">Курс: <span class="fw-semibold">{{ course.title }}</span></div>
+    </div>
+  </div>
+
+  <form method="post" id="testBuilderForm">
+    {% csrf_token %}
+    <input type="hidden" id="total_questions" name="total_questions" value="{{ existing_questions|length }}">
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Тест атауы</label>
+      <input
+        type="text"
+        class="form-control"
+        name="test_title"
+        value="{% if existing_test %}{{ existing_test.title }}{% else %}{{ course.title }} тесті{% endif %}"
+        placeholder="Мысалы: Python негіздері тесті"
+      >
+    </div>
+
+    <div id="questionsContainer" class="d-grid gap-3">
+      {% for question in existing_questions %}
+        <div class="question-card p-4" data-question-index="{{ forloop.counter }}">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="fw-bold">Сұрақ {{ forloop.counter }}</div>
+            <button type="button" class="btn btn-sm question-delete-btn">✕ Өшіру</button>
+          </div>
+          <label class="form-label fw-semibold">Сұрақ мәтіні</label>
+          <textarea class="form-control mb-3" rows="2" name="question_text_{{ forloop.counter }}" placeholder="Сұрақты жазыңыз...">{{ question.text }}</textarea>
+
+          {% for option in question.options.all %}
+            <div class="option-row p-3 mb-2 d-flex align-items-center gap-2">
+              <input
+                type="radio"
+                class="option-radio"
+                name="question_{{ forloop.parentloop.counter }}_correct"
+                value="{{ forloop.counter }}"
+                {% if option.is_correct %}checked{% endif %}
+              >
+              <input
+                type="text"
+                class="form-control"
+                name="question_{{ forloop.parentloop.counter }}_option_{{ forloop.counter }}"
+                value="{{ option.text }}"
+                placeholder="{{ forloop.counter }}-вариант"
+              >
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <button type="button" id="addQuestionBtn" class="btn btn-soft px-4">Сұрақ қосу</button>
+      <button type="submit" class="btn btn-gradient px-4">Сақтау</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const questionsContainer = document.getElementById("questionsContainer");
+  const totalQuestionsInput = document.getElementById("total_questions");
+  const addQuestionBtn = document.getElementById("addQuestionBtn");
+
+  function createOptionHtml(questionIndex, optionIndex) {
+    return `
+      <div class="option-row p-3 mb-2 d-flex align-items-center gap-2">
+        <input type="radio" class="option-radio" name="question_${questionIndex}_correct" value="${optionIndex}" ${optionIndex === 1 ? "checked" : ""}>
+        <input type="text" class="form-control" name="question_${questionIndex}_option_${optionIndex}" placeholder="${optionIndex}-вариант">
+      </div>
+    `;
+  }
+
+  function updateDeleteButtonsState() {
+    const cards = [...questionsContainer.querySelectorAll(".question-card")];
+    cards.forEach((card, index) => {
+      const deleteBtn = card.querySelector(".question-delete-btn");
+      if (!deleteBtn) return;
+      deleteBtn.disabled = index === 0 || cards.length === 1;
+    });
+  }
+
+  function renumberQuestions() {
+    const cards = [...questionsContainer.querySelectorAll(".question-card")];
+    cards.forEach((card, idx) => {
+      const questionIndex = idx + 1;
+      card.setAttribute("data-question-index", String(questionIndex));
+
+      const titleEl = card.querySelector(".fw-bold");
+      if (titleEl) {
+        titleEl.textContent = `Сұрақ ${questionIndex}`;
+      }
+
+      const questionText = card.querySelector("textarea");
+      if (questionText) {
+        questionText.name = `question_text_${questionIndex}`;
+      }
+
+      const correctRadioButtons = card.querySelectorAll('input[type="radio"]');
+      correctRadioButtons.forEach((radio, optionIdx) => {
+        radio.name = `question_${questionIndex}_correct`;
+        radio.value = String(optionIdx + 1);
+      });
+
+      const optionInputs = card.querySelectorAll('.option-row input[type="text"]');
+      optionInputs.forEach((input, optionIdx) => {
+        input.name = `question_${questionIndex}_option_${optionIdx + 1}`;
+      });
+    });
+
+    totalQuestionsInput.value = String(cards.length);
+    updateDeleteButtonsState();
+  }
+
+  function addQuestionCard() {
+    const nextIndex = Number(totalQuestionsInput.value || "0") + 1;
+    totalQuestionsInput.value = String(nextIndex);
+
+    const card = document.createElement("div");
+    card.className = "question-card p-4";
+    card.setAttribute("data-question-index", String(nextIndex));
+    card.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="fw-bold">Сұрақ ${nextIndex}</div>
+        <button type="button" class="btn btn-sm question-delete-btn">✕ Өшіру</button>
+      </div>
+      <label class="form-label fw-semibold">Сұрақ мәтіні</label>
+      <textarea class="form-control mb-3" rows="2" name="question_text_${nextIndex}" placeholder="Сұрақты жазыңыз..."></textarea>
+      ${createOptionHtml(nextIndex, 1)}
+      ${createOptionHtml(nextIndex, 2)}
+      ${createOptionHtml(nextIndex, 3)}
+      ${createOptionHtml(nextIndex, 4)}
+    `;
+    questionsContainer.appendChild(card);
+    updateDeleteButtonsState();
+  }
+
+  totalQuestionsInput.value = String(questionsContainer.querySelectorAll(".question-card").length);
+
+  if (questionsContainer.children.length === 0) {
+    addQuestionCard();
+  } else {
+    renumberQuestions();
+  }
+
+  questionsContainer.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (!target.classList.contains("question-delete-btn")) return;
+
+    const cards = [...questionsContainer.querySelectorAll(".question-card")];
+    if (cards.length === 1) {
+      return;
+    }
+
+    const card = target.closest(".question-card");
+    if (!card) return;
+    if (cards[0] === card) {
+      return;
+    }
+
+    card.remove();
+    renumberQuestions();
+  });
+
+  addQuestionBtn.addEventListener("click", addQuestionCard);
+  updateDeleteButtonsState();
+</script>
+{% endblock %}

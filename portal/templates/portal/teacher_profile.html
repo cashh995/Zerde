@@ -1,0 +1,78 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Оқытушы профилі — Zerde{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="feature-card p-4 h-100">
+      <div class="text-center">
+        <div class="mx-auto rounded-circle overflow-hidden border mb-3" style="width:120px;height:120px;">
+          {% if teacher_profile.photo %}
+            <img src="{{ teacher_profile.photo }}" alt="Фото" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+            <div class="h-100 d-flex align-items-center justify-content-center" style="background: rgba(108, 99, 255, 0.10); color: #6C63FF; font-size: 2rem; font-weight: 700;">
+              {{ request.user.full_name|default:request.user.username|slice:":1" }}
+            </div>
+          {% endif %}
+        </div>
+        <h1 class="h4 fw-bold mb-1">{{ request.user.full_name|default:request.user.username }}</h1>
+        <div class="text-muted">{{ request.user.major|default:"Оқытушы" }}</div>
+      </div>
+
+      <hr>
+      <div class="d-grid gap-2">
+        <a class="btn btn-gradient" href="{% url 'portal:teacher_profile_edit' %}">Профильді өзгерту</a>
+        <a class="btn btn-soft" href="{% url 'portal:teacher_dashboard' %}">Dashboard-қа оралу</a>
+      </div>
+
+      <hr>
+      <div class="small text-muted mb-2">Әлеуметтік желілер</div>
+      <div class="d-flex flex-column gap-2">
+        {% if teacher_profile.linkedin %}<a href="{{ teacher_profile.linkedin }}" target="_blank" class="btn btn-soft text-start">LinkedIn</a>{% endif %}
+        {% if teacher_profile.github %}<a href="{{ teacher_profile.github }}" target="_blank" class="btn btn-soft text-start">GitHub</a>{% endif %}
+        {% if not teacher_profile.linkedin and not teacher_profile.github %}
+          <div class="text-muted small">Сілтемелер әлі толтырылмаған.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="feature-card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-bold fs-5">Профиль туралы</div>
+        <span class="badge rounded-pill text-bg-light">Курстар: {{ courses_count }}</span>
+      </div>
+      <p class="text-secondary mb-0">{{ teacher_profile.bio|default:"Оқытушы био бөлімі толтырылмаған." }}</p>
+    </div>
+
+    <div class="feature-card p-4 mb-4">
+      <div class="fw-bold fs-5 mb-2">Білімі</div>
+      <p class="text-secondary mb-0">{{ teacher_profile.education_summary|default:"Білім туралы ақпарат жоқ."|linebreaksbr }}</p>
+    </div>
+
+    <div class="feature-card p-4 mb-4">
+      <div class="fw-bold fs-5 mb-2">Тәжірибесі</div>
+      <p class="text-secondary mb-0">{{ teacher_profile.experience_summary|default:"Тәжірибе туралы ақпарат жоқ."|linebreaksbr }}</p>
+    </div>
+
+    <div class="feature-card p-4 mb-4">
+      <div class="fw-bold fs-5 mb-2">Жетістіктері</div>
+      <p class="text-secondary mb-0">{{ teacher_profile.achievements_summary|default:"Жетістіктер туралы ақпарат жоқ."|linebreaksbr }}</p>
+    </div>
+
+    <div class="feature-card p-4">
+      <div class="fw-bold fs-5 mb-3">Дағдылары</div>
+      <div class="d-flex flex-wrap gap-2">
+        {% for skill in skills %}
+          <span class="badge rounded-pill" style="background: rgba(108, 99, 255, 0.12); color: #6C63FF;">{{ skill.name }}</span>
+        {% empty %}
+          <div class="text-muted">Дағдылар әлі қосылмаған.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,160 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Төлем — {{ course.title }} — Zerde{% endblock %}
+
+{% block extra_css %}
+<style>
+  .payment-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(108, 99, 255, 0.10);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(108, 99, 255, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .payment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 60px rgba(108, 99, 255, 0.18);
+  }
+  .course-info-panel {
+    background: linear-gradient(135deg, rgba(108, 99, 255, 0.06), rgba(255, 101, 132, 0.04));
+    border: 1px solid rgba(108, 99, 255, 0.10);
+    border-radius: 20px;
+    padding: 1.5rem;
+  }
+  .price-tag {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6C63FF, #FF6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #6C63FF, #8A7CFF);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    box-shadow: 0 8px 20px rgba(108, 99, 255, 0.25);
+  }
+  .form-label-custom {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #4b5573;
+    margin-bottom: 0.4rem;
+  }
+  .secure-badge {
+    background: rgba(25, 135, 84, 0.08);
+    color: #198754;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft">← Курсқа қайту</a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+    <div class="payment-card p-4 p-md-5">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="card-icon">💳</div>
+        <div>
+          <h1 class="section-title fs-4 mb-0">Курсты сатып алу</h1>
+          <div class="text-muted small">Қауіпсіз төлем жүйесі</div>
+        </div>
+      </div>
+
+      <div class="course-info-panel mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <div class="fw-bold fs-5">{{ course.title }}</div>
+            <div class="text-muted small mt-1">
+              Оқытушы: {{ course.teacher.user.full_name|default:course.teacher.user.username }}
+            </div>
+          </div>
+          <div class="price-tag">{{ course.price }} ₸</div>
+        </div>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label-custom">{{ form.card_number.label }}</label>
+          {{ form.card_number }}
+          {% if form.card_number.errors %}
+            <div class="text-danger small mt-1">{{ form.card_number.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label-custom">{{ form.card_holder.label }}</label>
+          {{ form.card_holder }}
+          {% if form.card_holder.errors %}
+            <div class="text-danger small mt-1">{{ form.card_holder.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-7">
+            <label class="form-label-custom">{{ form.expiry.label }}</label>
+            {{ form.expiry }}
+            {% if form.expiry.errors %}
+              <div class="text-danger small mt-1">{{ form.expiry.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-5">
+            <label class="form-label-custom">{{ form.cvv.label }}</label>
+            {{ form.cvv }}
+            {% if form.cvv.errors %}
+              <div class="text-danger small mt-1">{{ form.cvv.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+          <div class="secure-badge">🔒 Қауіпсіз төлем</div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-3 fw-bold fs-5">
+          Төлеу — {{ course.price }} ₸
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const expiryInput = document.querySelector('[name="expiry"]');
+  if (expiryInput) {
+    expiryInput.addEventListener('input', function () {
+      let v = this.value.replace(/[^0-9]/g, '');
+      if (v.length >= 2) {
+        v = v.slice(0, 2) + '/' + v.slice(2, 4);
+      }
+      this.value = v;
+    });
+  }
+
+  const holderInput = document.querySelector('[name="card_holder"]');
+  if (holderInput) {
+    holderInput.addEventListener('input', function () {
+      this.value = this.value.replace(/[^A-Za-z\s]/g, '').toUpperCase();
+    });
+  }
+});
+</script>
+{% endblock %}

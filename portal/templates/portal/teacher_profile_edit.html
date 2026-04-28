@@ -1,0 +1,38 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Профильді өзгерту — Zerde{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-10">
+    <div class="feature-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="section-title fs-3 mb-2">Оқытушы профилін өзгерту</h1>
+          <p class="text-muted mb-0">LinkedIn стиліндегі кәсіби профильді толтырыңыз.</p>
+        </div>
+        <a href="{% url 'portal:teacher_profile' %}" class="btn btn-soft">Профильге өту</a>
+      </div>
+
+      <form method="post" class="vstack gap-3">
+        {% csrf_token %}
+        {% for field in form %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="d-flex gap-2 pt-2">
+          <button class="btn btn-gradient px-4" type="submit">Сақтау</button>
+          <a href="{% url 'portal:teacher_profile' %}" class="btn btn-soft px-4">Бас тарту</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,157 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Тест нәтижесі — Zerde{% endblock %}
+
+{% block extra_css %}
+<style>
+  .result-card {
+    border-radius: 28px;
+    border: 1px solid rgba(108, 99, 255, 0.12);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(108, 99, 255, 0.08));
+    box-shadow: 0 20px 44px rgba(21, 35, 82, 0.14);
+  }
+  .result-pill {
+    border-radius: 999px;
+    background: rgba(108, 99, 255, 0.12);
+    color: #6C63FF;
+  }
+  .result-actions .btn {
+    transition: transform 0.3s ease;
+  }
+  .result-actions .btn:hover {
+    transform: translateY(-2px);
+  }
+  .review-card {
+    border-radius: 22px;
+    border: 1px solid rgba(108, 99, 255, 0.14);
+    background: rgba(255, 255, 255, 0.92);
+  }
+  .star-picker {
+    display: flex;
+    gap: 8px;
+  }
+  .star-btn {
+    border: none;
+    background: transparent;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #d2d6e8;
+    padding: 0;
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+  .star-btn:hover {
+    transform: translateY(-2px);
+  }
+  .star-btn.active {
+    color: #6C63FF;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-card p-4 p-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <div class="text-muted small mb-1">Курс тесті аяқталды</div>
+      <h1 class="section-title fs-2 mb-0">Нәтиже</h1>
+    </div>
+    <span class="result-pill px-3 py-2 fw-semibold">{{ attempt.percentage }}%</span>
+  </div>
+
+  <div class="feature-card border-0 p-4 mb-4">
+    <div class="small text-muted mb-1">Курс</div>
+    <div class="fw-bold mb-3">{{ attempt.test.course.title }}</div>
+    <div class="small text-muted mb-1">Тест</div>
+    <div class="fw-semibold">{{ attempt.test.title }}</div>
+  </div>
+
+  <div class="gradient-panel p-4 mb-4">
+    <div class="fs-5 fw-bold">{{ band_message }}</div>
+    <div class="mt-2">Дұрыс жауап: {{ attempt.score }}</div>
+  </div>
+
+  <div class="review-card p-4 mb-4">
+    <div class="fw-bold fs-5 mb-1">Курсқа пікір қалдыру</div>
+    <div class="text-muted small mb-3">Оқу сапасын бағалап, қысқаша пікір жазыңыз.</div>
+
+    {% if existing_review %}
+      <div class="alert alert-info border-0 rounded-4 mb-0">
+        Сіз бұл курсқа пікір қалдырып қойғансыз:
+        <span class="fw-semibold">{{ existing_review.rating }}★</span>
+        {% if existing_review.comment %}— {{ existing_review.comment }}{% endif %}
+      </div>
+    {% else %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="rating" id="ratingInput" value="0">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold d-block">Рейтинг</label>
+          <div class="star-picker" id="starPicker">
+            {% for star in star_range %}
+              <button
+                type="button"
+                class="star-btn"
+                data-value="{{ star }}"
+                aria-label="{{ star }} жұлдыз"
+              >
+                ★
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Пікір мәтіні</label>
+          <textarea
+            class="form-control"
+            name="comment"
+            rows="4"
+            placeholder="Курс туралы ойыңызды жазыңыз..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-gradient px-4">Пікір қалдыру</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="result-actions d-flex flex-wrap gap-2">
+    {% if can_get_certificate %}
+      <a href="{% url 'portal:download_course_certificate' attempt.id %}" class="btn btn-gradient px-4">
+        {% if existing_certificate %}Сертификатты жүктеу{% else %}Сертификат алу{% endif %}
+      </a>
+    {% endif %}
+    <a href="{% url 'portal:student_course_detail' attempt.test.course.id %}" class="btn btn-soft px-4">
+      Курсқа оралу
+    </a>
+    <a href="{% url 'portal:student_course_test' attempt.test.course.id %}" class="btn btn-gradient px-4">
+      Қайта тапсыру
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not existing_review %}
+<script>
+  const ratingInput = document.getElementById("ratingInput");
+  const starButtons = [...document.querySelectorAll("#starPicker .star-btn")];
+
+  function paintStars(rating) {
+    starButtons.forEach((btn) => {
+      const value = Number(btn.dataset.value || "0");
+      btn.classList.toggle("active", value <= rating);
+    });
+  }
+
+  starButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const rating = Number(btn.dataset.value || "0");
+      ratingInput.value = String(rating);
+      paintStars(rating);
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

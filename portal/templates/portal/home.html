@@ -1,0 +1,259 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Zerde | Басты бет{% endblock %}
+
+{% block content %}
+<section class="mb-5">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-lg-7">
+            <div class="hero-card p-4 p-md-5 h-100">
+                <span class="badge rounded-pill text-bg-light border px-3 py-2 mb-3">Zerde</span>
+                <h1 class="display-5 section-title mb-3">Білім жолын Zerde-пен кәсіби деңгейде бастаңыз</h1>
+                <p class="lead text-secondary mb-4">
+                    Үздік курстарды іздеңіз, тәжірибелі оқытушылардан үйреніңіз және нәтижені сертификатпен бекітіңіз.
+                </p>
+                <form class="mb-4" role="search" method="get" action="{% url 'portal:home' %}">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Курс іздеу: Python, Django, Data Science..." aria-label="Курс іздеу">
+                        <button class="btn btn-gradient px-4" type="submit">Іздеу</button>
+                    </div>
+                </form>
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <a href="{% url 'portal:register_student' %}" class="btn btn-gradient btn-lg px-4">Студент ретінде бастау</a>
+                    <a href="{% url 'portal:register_teacher' %}" class="btn btn-soft btn-lg px-4">Оқытушы ретінде қосылу</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="gradient-panel p-4 p-md-5 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="small text-white-50 mb-2">Неліктен Zerde?</div>
+                    <h2 class="h2 fw-bold mb-3">Бір платформада оқу, оқыту және өсу</h2>
+                    <p class="mb-4 text-white-50">
+                        Интуитивті интерфейс, сенімді инфрақұрылым және кәсіби контент арқылы сіздің оқу сапарыңыз әрдайым алға жылжиды.
+                    </p>
+                </div>
+                {% if request.user.is_authenticated %}
+                    <div class="bg-white bg-opacity-10 rounded-4 p-4">
+                        <div class="fw-semibold mb-1">Қош келдіңіз, {{ request.user.full_name|default:request.user.username }}!</div>
+                        <div class="text-white-50">Рөліңіз: {{ request.user.get_role_display }}</div>
+                    </div>
+                {% else %}
+                    <div class="bg-white bg-opacity-10 rounded-4 p-4">
+                        <div class="fw-semibold mb-1">Аккаунтыңыз бар ма?</div>
+                        <a href="{% url 'portal:login' %}" class="btn btn-light text-dark fw-semibold rounded-pill px-4 mt-2">Жүйеге кіру</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if search_query %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Іздеу нәтижесі</h2>
+            <p class="text-secondary mb-0">Сұраныс: "{{ search_query }}"</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        {% for course in searched_courses %}
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card p-4 h-100">
+                    <h3 class="h5 fw-bold">{{ course.title }}</h3>
+                    <div class="text-muted small mb-2">Оқытушы: {{ course.teacher.user.full_name|default:course.teacher.user.username }}</div>
+                    <p class="text-secondary">{{ course.description|truncatechars:110 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold text-primary">{{ course.price }} ₸</span>
+                        {% if request.user.is_authenticated and request.user.role == 'student' %}
+                            <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft">Көру</a>
+                        {% else %}
+                            <a href="{% url 'portal:login' %}" class="btn btn-soft">Кіру</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info border-0 rounded-4">Курстар табылмады.</div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Жаңа курстар</h2>
+            <p class="text-secondary mb-0">Базаға соңғы қосылған курстар.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        {% for course in latest_courses %}
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card p-4 h-100">
+                    <h3 class="h5 fw-bold">{{ course.title }}</h3>
+                    <div class="text-muted small mb-2">Оқытушы: {{ course.teacher.user.full_name|default:course.teacher.user.username }}</div>
+                    <p class="text-secondary">{{ course.description|truncatechars:110 }}</p>
+                    <span class="fw-semibold text-primary">{{ course.price }} ₸</span>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info border-0 rounded-4">Курстар әлі қосылмаған.</div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="row g-3 g-md-4">
+        <div class="col-6 col-lg-3">
+            <div class="feature-card p-4 text-center h-100">
+                <div class="fs-2 fw-bold text-primary">1200+</div>
+                <div class="text-secondary">Студент</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="feature-card p-4 text-center h-100">
+                <div class="fs-2 fw-bold text-primary">150+</div>
+                <div class="text-secondary">Курс</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="feature-card p-4 text-center h-100">
+                <div class="fs-2 fw-bold text-primary">50+</div>
+                <div class="text-secondary">Оқытушы</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="feature-card p-4 text-center h-100">
+                <div class="fs-2 fw-bold text-primary">800+</div>
+                <div class="text-secondary">Сертификат</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Қалай жұмыс істейді?</h2>
+            <p class="text-secondary mb-0">Zerde-та оқу процесі 4 қарапайым қадамнан тұрады.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card p-4 h-100">
+                <div class="fw-bold text-primary mb-2">1-қадам</div>
+                <h3 class="h5 fw-bold">Тіркелу</h3>
+                <p class="text-secondary mb-0">Студент немесе оқытушы ретінде жылдам аккаунт ашыңыз.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card p-4 h-100">
+                <div class="fw-bold text-primary mb-2">2-қадам</div>
+                <h3 class="h5 fw-bold">Таңдау</h3>
+                <p class="text-secondary mb-0">Мақсатыңызға сәйкес ең пайдалы курстарды таңдаңыз.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card p-4 h-100">
+                <div class="fw-bold text-primary mb-2">3-қадам</div>
+                <h3 class="h5 fw-bold">Оқу</h3>
+                <p class="text-secondary mb-0">Сабақтарды өтіп, тест тапсырып, прогресті қадағалаңыз.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card p-4 h-100">
+                <div class="fw-bold text-primary mb-2">4-қадам</div>
+                <h3 class="h5 fw-bold">Сертификат</h3>
+                <p class="text-secondary mb-0">Курсты аяқтап, ресми цифрлық сертификат алыңыз.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Танымал курстар</h2>
+            <p class="text-secondary mb-0">Нарықта сұранысы жоғары 6 бағыт.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">Python және Django Pro</h3><p class="text-secondary">Веб backend жасаудың толық практикалық курсы.</p><div class="fw-semibold text-primary">4.9 ★</div></div></div>
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">Frontend Mastery</h3><p class="text-secondary">HTML, CSS, JS және React негіздері мен жобалар.</p><div class="fw-semibold text-primary">4.8 ★</div></div></div>
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">Data Analytics Fundamentals</h3><p class="text-secondary">Excel, SQL және BI құралдары арқылы талдау.</p><div class="fw-semibold text-primary">4.7 ★</div></div></div>
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">UI/UX Design Start</h3><p class="text-secondary">Figma арқылы заманауи интерфейс жобалау.</p><div class="fw-semibold text-primary">4.8 ★</div></div></div>
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">DevOps Essentials</h3><p class="text-secondary">CI/CD, Docker және deployment процестері.</p><div class="fw-semibold text-primary">4.9 ★</div></div></div>
+        <div class="col-md-6 col-lg-4"><div class="feature-card p-4 h-100"><h3 class="h5 fw-bold">AI және Machine Learning</h3><p class="text-secondary">ML модельдерін әзірлеу және қолдану негіздері.</p><div class="fw-semibold text-primary">4.9 ★</div></div></div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Үздік оқытушылар</h2>
+            <p class="text-secondary mb-0">Тәжірибесі мол сарапшылардан үйреніңіз.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <h3 class="h5 fw-bold mb-1">Айдос Нұрлан</h3>
+                <div class="text-secondary small mb-2">Senior Backend Engineer</div>
+                <p class="text-secondary mb-0">Python/Django бағыты бойынша 8+ жыл тәжірибе.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <h3 class="h5 fw-bold mb-1">Айым Сейтова</h3>
+                <div class="text-secondary small mb-2">Data Scientist</div>
+                <p class="text-secondary mb-0">Data және ML бойынша халықаралық жобалар жетекшісі.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <h3 class="h5 fw-bold mb-1">Дамир Қайрат</h3>
+                <div class="text-secondary small mb-2">Product & UX Mentor</div>
+                <p class="text-secondary mb-0">UI/UX және digital өнім жасау бойынша ментор.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-2">Студент пікірлері</h2>
+            <p class="text-secondary mb-0">Zerde қолданушыларының шынайы тәжірибесі.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <div class="text-warning mb-2">★★★★★</div>
+                <p class="text-secondary">"Сабақтар өте түсінікті, қысқа уақытта нақты дағды жинадым."</p>
+                <div class="fw-semibold">Назерке, студент</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <div class="text-warning mb-2">★★★★★</div>
+                <p class="text-secondary">"Курстар құрылымы Udemy-дегідей кәсіби, интерфейсі өте ыңғайлы."</p>
+                <div class="fw-semibold">Ерасыл, junior developer</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+                <div class="text-warning mb-2">★★★★★</div>
+                <p class="text-secondary">"Оқытушылар деңгейі жоғары, сертификат алу процесі де өте жеңіл."</p>
+                <div class="fw-semibold">Мадина, analyst</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

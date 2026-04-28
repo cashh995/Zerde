@@ -1,0 +1,85 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Курсты өңдеу — Zerde{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-10">
+    <div class="feature-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+          <h1 class="section-title fs-3 mb-2">Курсты өңдеу</h1>
+          <p class="text-muted mb-0">Курс деректерін жаңартып, панельге сақтаңыз.</p>
+        </div>
+        <a href="{% url 'portal:teacher_dashboard' %}" class="btn btn-soft">Кері қайту</a>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" class="vstack gap-3">
+        {% csrf_token %}
+
+        <div>
+          <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">{{ form.title.label }}</label>
+          {{ form.title }}
+          {% if form.title.errors %}
+            <div class="text-danger small mt-1">{{ form.title.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">{{ form.description.label }}</label>
+          {{ form.description }}
+          {% if form.description.errors %}
+            <div class="text-danger small mt-1">{{ form.description.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">{{ form.category.label }}</label>
+          {{ form.category }}
+          {% if form.category.errors %}
+            <div class="text-danger small mt-1">{{ form.category.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-7">
+            <label for="{{ form.price.id_for_label }}" class="form-label fw-semibold">{{ form.price.label }}</label>
+            {{ form.price }}
+            {% if form.price.errors %}
+              <div class="text-danger small mt-1">{{ form.price.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-5">
+            <div class="form-check mt-4 pt-2">
+              {{ form.is_free }}
+              <label class="form-check-label fw-semibold" for="{{ form.is_free.id_for_label }}">
+                {{ form.is_free.label }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.course_image.id_for_label }}" class="form-label fw-semibold">{{ form.course_image.label }}</label>
+          {{ form.course_image }}
+          {% if course.image %}
+            <div class="form-text">Ағымдағы сурет: {{ course.image.name|default:"Жүктелген" }}</div>
+          {% endif %}
+          {% if form.course_image.errors %}
+            <div class="text-danger small mt-1">{{ form.course_image.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-4 border-0 mb-0">{{ form.non_field_errors|striptags }}</div>
+        {% endif %}
+
+        <div class="d-flex flex-wrap gap-2 pt-2">
+          <button type="submit" class="btn btn-gradient px-4 py-2">Өзгерістерді сақтау</button>
+          <a href="{% url 'portal:teacher_dashboard' %}" class="btn btn-soft px-4 py-2">Бас тарту</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Студент панелі — Zerde{% endblock %}
+
+{% block content %}
+<div class="row g-4 align-items-stretch">
+  <div class="col-lg-4">
+    <div class="feature-card p-4 h-100">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle overflow-hidden border" style="width:72px;height:72px;">
+          <div class="h-100 w-100 d-flex align-items-center justify-content-center" style="background: rgba(108, 99, 255, 0.10); color: #6C63FF; font-weight: 800;">
+            {{ request.user.full_name|default:request.user.username|slice:":1" }}
+          </div>
+        </div>
+        <div>
+          <div class="fw-bold fs-5 mb-1">{{ request.user.full_name|default:request.user.username }}</div>
+          <div class="text-muted small">Мамандығы: {{ request.user.major|default:"Көрсетілмеген" }}</div>
+          <div class="text-muted small">Тобы: {{ request.user.group_name|default:"Көрсетілмеген" }}</div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="p-3 rounded-4" style="background: rgba(108, 99, 255, 0.08);">
+            <div class="text-muted small fw-semibold">Курстар</div>
+            <div class="fw-bold fs-4 mb-0">{{ enrollments|length }}</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 rounded-4" style="background: rgba(255, 101, 132, 0.08);">
+            <div class="text-muted small fw-semibold">Сертификаттар</div>
+            <div class="fw-bold fs-4 mb-0">{{ certificates|length }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-grid mt-4">
+        <a class="btn btn-gradient py-3 mb-2" href="{% url 'portal:student_courses' %}">Курстарды көру</a>
+        <a class="btn btn-soft py-3" href="{% url 'portal:home' %}">Басты бетке қайту</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="feature-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="fw-bold fs-5">Менің курстарым</div>
+          <div class="text-muted small">Прогрессіңіз автоматты түрде есептеледі.</div>
+        </div>
+      </div>
+
+      <div class="vstack gap-3">
+        {% for item in enrollment_cards %}
+          <div class="p-3 rounded-4 border enrollment-item" style="background: rgba(255, 255, 255, 0.75);">
+            <div class="d-flex justify-content-between align-items-start">
+              <a
+                href="{% url 'portal:student_course_detail' item.enrollment.course.id %}"
+                class="fw-semibold enrollment-course-link"
+              >
+                {{ item.enrollment.course.title }}
+              </a>
+              <div class="text-muted small">{{ item.enrollment.enrolled_at|date:"d.m.Y" }}</div>
+            </div>
+            <div class="progress mt-3" style="height: 10px; border-radius: 999px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ item.progress }}%; background: linear-gradient(90deg, #6C63FF, #8A7CFF);"></div>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mt-2">
+              <span>Прогресс</span>
+              <span class="fw-semibold">{{ item.progress }}%</span>
+            </div>
+          </div>
+        {% empty %}
+          <div class="alert alert-info border-0 rounded-4 shadow-sm mb-0">
+            Сізде әзірге курс жоқ. Курстарды басты беттен таңдаңыз.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-4">
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="fw-bold fs-5">Сертификаттарым</div>
+          <div class="text-muted small">Аяқталған курстар бойынша сертификаттар.</div>
+        </div>
+      </div>
+
+      <div class="list-group list-group-flush">
+        {% for cert in certificates %}
+          <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">{{ cert.enrollment.course.title }}</div>
+              <div class="text-muted small">Код: {{ cert.certificate_code }} · Берілді: {{ cert.issued_at|date:"d.m.Y" }}</div>
+            </div>
+            {% if cert.file %}
+              <a class="btn btn-soft" href="{{ cert.file.url }}">Жүктеу</a>
+            {% else %}
+              <span class="badge rounded-pill text-bg-secondary">Файл жоқ</span>
+            {% endif %}
+          </div>
+        {% empty %}
+          <div class="text-muted">Әзірге сертификат жоқ.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="fw-bold fs-5">Төлем тарихы</div>
+          <div class="text-muted small">Соңғы 20 төлем жазбасы.</div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr class="text-muted small">
+              <th>Курс</th>
+              <th class="text-end">Сома</th>
+              <th class="text-end">Күйі</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pay in payments %}
+              <tr>
+                <td class="fw-semibold">{{ pay.enrollment.course.title }}</td>
+                <td class="text-end">{{ pay.amount }} ₸</td>
+                <td class="text-end">
+                  {% if pay.status == "paid" %}
+                    <span class="badge rounded-pill text-bg-success">Төленді</span>
+                  {% elif pay.status == "pending" %}
+                    <span class="badge rounded-pill text-bg-warning">Күтілуде</span>
+                  {% else %}
+                    <span class="badge rounded-pill text-bg-danger">Сәтсіз</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3" class="text-muted">Төлем жазбалары жоқ.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .enrollment-item {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .enrollment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(108, 99, 255, 0.15);
+  }
+  .enrollment-course-link {
+    color: #6C63FF;
+    text-decoration: none;
+    transition: transform 0.3s ease, opacity 0.3s ease, color 0.3s ease;
+    display: inline-block;
+  }
+  .enrollment-course-link:hover {
+    color: #5b52ee;
+    transform: translateY(-2px);
+    opacity: 0.95;
+  }
+</style>
+{% endblock %}
+

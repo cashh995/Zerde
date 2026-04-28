@@ -1,0 +1,95 @@
+{% extends "portal/base.html" %}
+
+{% block title %}{{ teacher_profile.user.full_name|default:teacher_profile.user.username }} — Zerde{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{% url 'portal:teachers_list' %}" class="btn btn-soft">← Оқытушылар тізіміне қайту</a>
+</div>
+
+<section class="feature-card p-4 p-md-5 mb-4">
+  <div class="row g-4 align-items-center">
+    <div class="col-md-3 text-center">
+      {% if teacher_profile.photo %}
+        <img src="{{ teacher_profile.photo }}" alt="{{ teacher_profile.user.full_name }}" class="rounded-circle border shadow-sm" style="width:160px;height:160px;object-fit:cover;">
+      {% else %}
+        <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center border" style="width:160px;height:160px;background:rgba(108,99,255,.12);color:#6C63FF;font-size:52px;font-weight:800;">
+          {{ teacher_profile.user.full_name|default:teacher_profile.user.username|slice:":1" }}
+        </div>
+      {% endif %}
+    </div>
+    <div class="col-md-9">
+      <h1 class="section-title mb-2">{{ teacher_profile.user.full_name|default:teacher_profile.user.username }}</h1>
+      <p class="text-muted mb-3">Рейтинг: <span class="fw-semibold" style="color:#6C63FF;">{{ rating|floatformat:1 }} ★</span></p>
+      <p class="text-secondary mb-0">{{ teacher_profile.bio|default:"Био әлі толтырылмаған."|linebreaksbr }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Білімі</h2>
+      <div class="text-secondary">{{ teacher_profile.education_summary|default:"Ақпарат көрсетілмеген."|linebreaksbr }}</div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Тәжірибесі</h2>
+      <div class="text-secondary">{{ teacher_profile.experience_summary|default:"Ақпарат көрсетілмеген."|linebreaksbr }}</div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Жетістіктері</h2>
+      <div class="text-secondary">{{ teacher_profile.achievements_summary|default:"Ақпарат көрсетілмеген."|linebreaksbr }}</div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="feature-card p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Дағдылары</h2>
+      <div class="d-flex flex-wrap gap-2">
+        {% for skill in teacher_profile.skills.all %}
+          <span class="badge rounded-pill px-3 py-2" style="background:rgba(108,99,255,.12);color:#6C63FF;">{{ skill.name }}</span>
+        {% empty %}
+          <span class="text-muted">Дағдылар әлі қосылмаған.</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature-card p-4">
+  <h2 class="h5 fw-bold mb-3">Курстары</h2>
+  <div class="row g-3">
+    {% for course in courses %}
+      <div class="col-md-6">
+        <div class="p-3 rounded-4 border h-100 course-item">
+          <div class="fw-semibold mb-1">{{ course.title }}</div>
+          <div class="text-muted small mb-2">{{ course.description|truncatechars:110 }}</div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small text-muted">{{ course.price }} ₸</span>
+            {% if request.user.is_authenticated and request.user.role == "student" %}
+              <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft btn-sm">Курсқа өту</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-muted">Бұл оқытушыда әзірге курс жоқ.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .course-item {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .course-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 35px rgba(108, 99, 255, 0.18);
+  }
+</style>
+{% endblock %}

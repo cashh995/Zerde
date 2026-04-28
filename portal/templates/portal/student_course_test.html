@@ -1,0 +1,90 @@
+{% extends "portal/base.html" %}
+
+{% block title %}{{ test.title }} — Zerde{% endblock %}
+
+{% block extra_css %}
+<style>
+  .test-shell {
+    background: linear-gradient(150deg, rgba(108, 99, 255, 0.14), rgba(255, 101, 132, 0.08));
+    border: 1px solid rgba(108, 99, 255, 0.12);
+    border-radius: 24px;
+    box-shadow: 0 18px 40px rgba(31, 42, 99, 0.12);
+  }
+  .option-card {
+    border: 1px solid rgba(108, 99, 255, 0.16);
+    border-radius: 16px;
+    background: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .option-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(108, 99, 255, 0.18);
+    border-color: rgba(108, 99, 255, 0.32);
+  }
+  .option-radio {
+    accent-color: #6C63FF;
+    width: 18px;
+    height: 18px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex flex-wrap gap-2">
+  <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft">← Курсқа қайту</a>
+</div>
+
+<div class="test-shell p-4 p-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <div class="text-muted small">Курс тесті</div>
+      <h1 class="section-title fs-3 mb-0">{{ test.title }}</h1>
+    </div>
+    <span class="badge rounded-pill px-3 py-2" style="background: rgba(108, 99, 255, 0.12); color: #6C63FF;">
+      {{ question_index }} / {{ total_questions }} сұрақ
+    </span>
+  </div>
+
+  <div class="mb-4">
+    <div class="progress" role="progressbar" aria-label="Тест прогресі" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" style="width: {% widthratio question_index total_questions 100 %}%; background:#6C63FF;"></div>
+    </div>
+    <div class="small text-muted mt-2">Жауап берілгені: {{ answered_count }} / {{ total_questions }}</div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="question_id" value="{{ question.id }}">
+
+    <div class="feature-card p-4 mb-4 border-0">
+      <h2 class="fs-5 mb-0">{{ question_index }}. {{ question.text }}</h2>
+    </div>
+
+    <div class="d-grid gap-3 mb-4">
+      {% for option in question.options.all %}
+        <label class="option-card p-3 d-flex align-items-center gap-3">
+          <input
+            type="radio"
+            class="option-radio"
+            name="selected_option"
+            value="{{ option.id }}"
+            {% if selected_option == option.id|stringformat:"s" %}checked{% endif %}
+          >
+          <span class="fw-medium">{{ option.text }}</span>
+        </label>
+      {% endfor %}
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <button type="submit" name="action" value="back" class="btn btn-soft px-4" {% if question_index == 1 %}disabled{% endif %}>
+        Артқа
+      </button>
+      {% if question_index < total_questions %}
+        <button type="submit" name="action" value="next" class="btn btn-gradient px-4">Алға</button>
+      {% else %}
+        <button type="submit" name="action" value="finish" class="btn btn-gradient px-4">Тестті аяқтау</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

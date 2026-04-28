@@ -1,0 +1,62 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Оқытушылар — Zerde{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+  <div class="feature-card p-4 p-md-5">
+    <h1 class="section-title mb-2">Оқытушылар тізімі</h1>
+    <p class="text-muted mb-0">Тәжірибелі мамандардың профилін қарап, өзіңізге лайық курсты таңдаңыз.</p>
+  </div>
+</section>
+
+<section>
+  <div class="row g-4">
+    {% for item in teacher_cards %}
+      <div class="col-md-6 col-xl-4">
+        <a href="{% url 'portal:teacher_public_profile' item.profile.id %}" class="text-decoration-none">
+          <div class="feature-card p-4 h-100 teacher-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              {% if item.profile.photo %}
+                <img src="{{ item.profile.photo }}" alt="{{ item.profile.user.full_name }}" class="rounded-circle border" style="width:72px;height:72px;object-fit:cover;">
+              {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center border" style="width:72px;height:72px;background:rgba(108,99,255,.12);color:#6C63FF;font-weight:800;">
+                  {{ item.profile.user.full_name|default:item.profile.user.username|slice:":1" }}
+                </div>
+              {% endif %}
+              <div>
+                <div class="fw-bold fs-5 text-dark">{{ item.profile.user.full_name|default:item.profile.user.username }}</div>
+                <div class="text-muted small">{{ item.profile.experience_summary|default:"Мамандығы көрсетілмеген"|truncatechars:48 }}</div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mb-2">
+              <span>Курс саны</span>
+              <span class="fw-semibold text-dark">{{ item.profile.courses_count }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted small">
+              <span>Рейтинг</span>
+              <span class="fw-semibold" style="color:#6C63FF;">{{ item.rating|floatformat:1 }} ★</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-info border-0 rounded-4 shadow-sm">Әзірге оқытушылар профилі толтырылмаған.</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .teacher-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .teacher-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 55px rgba(108, 99, 255, 0.22);
+  }
+</style>
+{% endblock %}

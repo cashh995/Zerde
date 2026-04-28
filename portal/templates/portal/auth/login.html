@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Жүйеге кіру{% endblock %}
+
+{% block content %}
+<section class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-5">
+                <div class="gradient-panel p-4 p-md-5 h-100">
+                    <span class="badge rounded-pill bg-white text-dark mb-3">Welcome Back</span>
+                    <h1 class="h2 fw-bold mb-3">Жүйеге қауіпсіз кіріңіз</h1>
+                    <p class="text-white-50 mb-4">
+                        Бір аккаунтпен студент не оқытушы ретінде жүйеге кіріп, оқу кеңістігіңізді жалғастырыңыз.
+                    </p>
+                    <div class="bg-white bg-opacity-10 rounded-4 p-4">
+                        <div class="fw-semibold mb-2">Кіру тәсілі</div>
+                        <div class="text-white-50">Email немесе логинді және құпиясөзді енгізіңіз.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="auth-card p-4 p-md-5">
+                    <div class="mb-4">
+                        <div class="small text-uppercase text-secondary fw-semibold">Login</div>
+                        <h2 class="section-title mb-2">Қайта қош келдіңіз</h2>
+                        <p class="text-secondary mb-0">Білім беру порталына кіріп, жұмысыңызды жалғастырыңыз.</p>
+                    </div>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% include "portal/auth/partials/form_fields.html" %}
+                        <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold">Жүйеге кіру</button>
+                    </form>
+                    <div class="mt-4 text-secondary">
+                        Жаңа қолданушысыз ба?
+                        <a href="{% url 'portal:register_student' %}" class="fw-semibold">Студент ретінде тіркелу</a>
+                        немесе
+                        <a href="{% url 'portal:register_teacher' %}" class="fw-semibold">оқытушы ретінде тіркелу</a>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

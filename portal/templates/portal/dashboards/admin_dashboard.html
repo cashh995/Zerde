@@ -1,0 +1,798 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Админ панелі — Zerde{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-stat-card {
+    background: linear-gradient(135deg, rgba(108,99,255,0.08) 0%, rgba(255,101,132,0.06) 100%);
+    border: 1px solid rgba(108,99,255,0.12);
+    border-radius: 20px;
+    padding: 28px 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .admin-stat-card::before {
+    content: "";
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(255,101,132,0.12));
+  }
+  .admin-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(108,99,255,0.18);
+  }
+  .admin-stat-card .stat-icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 14px;
+  }
+  .admin-stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #1f2940;
+  }
+  .admin-stat-card .stat-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  .icon-students { background: linear-gradient(135deg, #6C63FF, #8B83FF); color: #fff; }
+  .icon-teachers { background: linear-gradient(135deg, #FF6584, #FF8FA3); color: #fff; }
+  .icon-courses  { background: linear-gradient(135deg, #10B981, #34D399); color: #fff; }
+  .icon-revenue  { background: linear-gradient(135deg, #F59E0B, #FBBF24); color: #fff; }
+
+  .admin-panel {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(255,255,255,0.65);
+    border-radius: 20px;
+    box-shadow: 0 12px 35px rgba(43,52,103,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .admin-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 45px rgba(108,99,255,0.14);
+  }
+
+  .admin-panel .panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(108,99,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-panel .panel-header h5 {
+    font-weight: 700;
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .admin-panel .panel-body {
+    padding: 16px 24px 24px;
+  }
+
+  .tab-nav-admin {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab-nav-admin .tab-btn {
+    padding: 8px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(108,99,255,0.15);
+    background: rgba(108,99,255,0.04);
+    color: #6C63FF;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .tab-nav-admin .tab-btn:hover,
+  .tab-nav-admin .tab-btn.active {
+    background: linear-gradient(135deg, #6C63FF, #8B83FF);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 20px rgba(108,99,255,0.25);
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .admin-table thead th {
+    background: rgba(108,99,255,0.04);
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(108,99,255,0.08);
+  }
+  .admin-table thead th:first-child { border-radius: 12px 0 0 0; }
+  .admin-table thead th:last-child  { border-radius: 0 12px 0 0; }
+  .admin-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    vertical-align: middle;
+    font-size: 0.9rem;
+  }
+  .admin-table tbody tr {
+    transition: background 0.2s ease;
+  }
+  .admin-table tbody tr:hover {
+    background: rgba(108,99,255,0.03);
+  }
+
+  .btn-action {
+    padding: 5px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .btn-action:hover { transform: translateY(-1px); }
+
+  .btn-block   { background: rgba(239,68,68,0.1);  color: #EF4444; }
+  .btn-block:hover { background: rgba(239,68,68,0.2); color: #DC2626; }
+
+  .btn-activate { background: rgba(16,185,129,0.1); color: #10B981; }
+  .btn-activate:hover { background: rgba(16,185,129,0.2); color: #059669; }
+
+  .btn-delete  { background: rgba(239,68,68,0.1);  color: #EF4444; }
+  .btn-delete:hover { background: rgba(239,68,68,0.2); color: #DC2626; }
+
+  .badge-active   { background: rgba(16,185,129,0.12); color: #059669; font-weight: 600; }
+  .badge-blocked  { background: rgba(239,68,68,0.12);  color: #DC2626; font-weight: 600; }
+  .badge-paid     { background: rgba(16,185,129,0.12); color: #059669; }
+  .badge-pending  { background: rgba(245,158,11,0.12); color: #D97706; }
+  .badge-failed   { background: rgba(239,68,68,0.12);  color: #DC2626; }
+
+  .settings-card {
+    background: linear-gradient(135deg, rgba(108,99,255,0.06), rgba(255,101,132,0.04));
+    border: 1px solid rgba(108,99,255,0.12);
+    border-radius: 20px;
+    padding: 28px;
+  }
+
+  .fee-display {
+    font-size: 2.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6C63FF, #FF6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .fee-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #6C63FF, #FF6584);
+    outline: none;
+    transition: opacity 0.2s;
+  }
+  .fee-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #6C63FF;
+    box-shadow: 0 4px 12px rgba(108,99,255,0.3);
+    cursor: pointer;
+    transition: box-shadow 0.2s ease;
+  }
+  .fee-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 6px 20px rgba(108,99,255,0.5);
+  }
+
+  .toast-admin {
+    position: fixed;
+    top: 90px; right: 24px;
+    z-index: 9999;
+    min-width: 280px;
+    padding: 14px 22px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(108,99,255,0.15);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  .search-box {
+    position: relative;
+  }
+  .search-box input {
+    padding-left: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(108,99,255,0.15);
+    background: rgba(108,99,255,0.03);
+    min-height: 42px;
+    font-size: 0.88rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .search-box input:focus {
+    border-color: rgba(108,99,255,0.4);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.08);
+  }
+  .search-box .search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="adminToast" class="toast-admin"></div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <div class="section-title fs-2 mb-1">Басқару панелі</div>
+    <div class="text-muted">Платформа көрсеткіштері, қолданушылар, курстар мен төлемдер.</div>
+  </div>
+  <a class="btn btn-soft" href="/admin/">Django Admin</a>
+</div>
+
+<!-- ═══════ 1. СТАТИСТИКА КАРТОЧКАЛАРЫ ═══════ -->
+<div class="row g-4 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="admin-stat-card">
+      <div class="stat-icon icon-students">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="stat-value">{{ student_count }}</div>
+      <div class="stat-label">Жалпы студент</div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="admin-stat-card">
+      <div class="stat-icon icon-teachers">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="stat-value">{{ teacher_count }}</div>
+      <div class="stat-label">Жалпы оқытушы</div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="admin-stat-card">
+      <div class="stat-icon icon-courses">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="stat-value">{{ course_count }}</div>
+      <div class="stat-label">Жалпы курс</div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="admin-stat-card">
+      <div class="stat-icon icon-revenue">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div class="stat-value">{{ revenue_total }} ₸</div>
+      <div class="stat-label">Жалпы табыс</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 2. ГРАФИКТЕР ҚАТАРЫ ═══════ -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="admin-panel h-100">
+      <div class="panel-header">
+        <h5>Табыс графигі</h5>
+        <span class="text-muted small">Соңғы 6 ай</span>
+      </div>
+      <div class="panel-body">
+        <div style="height: 300px;">
+          <canvas id="adminRevenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="admin-panel h-100">
+      <div class="panel-header">
+        <h5>Қолданушы таратылуы</h5>
+        <span class="text-muted small">Рөл бойынша</span>
+      </div>
+      <div class="panel-body d-flex align-items-center justify-content-center">
+        <div style="height: 260px; width: 260px;">
+          <canvas id="adminUserPieChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 3. ҚОЛДАНУШЫЛАР БАСҚАРУ ═══════ -->
+<div class="admin-panel mb-4">
+  <div class="panel-header">
+    <h5>Қолданушылар басқару</h5>
+  </div>
+  <div class="panel-body">
+    <div class="tab-nav-admin">
+      <button class="tab-btn active" onclick="switchUserTab('students', this)">Студенттер ({{ student_count }})</button>
+      <button class="tab-btn" onclick="switchUserTab('teachers', this)">Оқытушылар ({{ teacher_count }})</button>
+    </div>
+
+    <!-- Студенттер -->
+    <div id="tab-students">
+      <div class="search-box mb-3">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" class="form-control" placeholder="Студент іздеу..." onkeyup="filterTable(this, 'students-table')">
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table" id="students-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Аты-жөні</th>
+              <th>Логин</th>
+              <th>Email</th>
+              <th>Тіркелу күні</th>
+              <th>Күйі</th>
+              <th>Әрекет</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+            <tr id="user-row-{{ s.id }}">
+              <td class="text-muted">{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ s.full_name|default:s.username }}</td>
+              <td class="text-muted">{{ s.username }}</td>
+              <td class="text-muted">{{ s.email|default:"—" }}</td>
+              <td class="text-muted small">{{ s.date_joined|date:"d.m.Y" }}</td>
+              <td>
+                <span id="badge-{{ s.id }}" class="badge rounded-pill {% if s.is_active %}badge-active{% else %}badge-blocked{% endif %}">
+                  {% if s.is_active %}Белсенді{% else %}Блокталған{% endif %}
+                </span>
+              </td>
+              <td>
+                <button id="toggle-btn-{{ s.id }}"
+                        class="btn-action {% if s.is_active %}btn-block{% else %}btn-activate{% endif %}"
+                        onclick="toggleUser({{ s.id }}, this)">
+                  {% if s.is_active %}Блоктау{% else %}Белсендіру{% endif %}
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-muted text-center py-4">Студенттер жоқ</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Оқытушылар -->
+    <div id="tab-teachers" style="display: none;">
+      <div class="search-box mb-3">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" class="form-control" placeholder="Оқытушы іздеу..." onkeyup="filterTable(this, 'teachers-table')">
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table" id="teachers-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Аты-жөні</th>
+              <th>Логин</th>
+              <th>Email</th>
+              <th>Тіркелу күні</th>
+              <th>Күйі</th>
+              <th>Әрекет</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in teachers %}
+            <tr id="user-row-{{ t.id }}">
+              <td class="text-muted">{{ forloop.counter }}</td>
+              <td class="fw-semibold">{{ t.full_name|default:t.username }}</td>
+              <td class="text-muted">{{ t.username }}</td>
+              <td class="text-muted">{{ t.email|default:"—" }}</td>
+              <td class="text-muted small">{{ t.date_joined|date:"d.m.Y" }}</td>
+              <td>
+                <span id="badge-{{ t.id }}" class="badge rounded-pill {% if t.is_active %}badge-active{% else %}badge-blocked{% endif %}">
+                  {% if t.is_active %}Белсенді{% else %}Блокталған{% endif %}
+                </span>
+              </td>
+              <td>
+                <button id="toggle-btn-{{ t.id }}"
+                        class="btn-action {% if t.is_active %}btn-block{% else %}btn-activate{% endif %}"
+                        onclick="toggleUser({{ t.id }}, this)">
+                  {% if t.is_active %}Блоктау{% else %}Белсендіру{% endif %}
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-muted text-center py-4">Оқытушылар жоқ</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 4. КУРСТАР ТІЗІМІ ═══════ -->
+<div class="admin-panel mb-4">
+  <div class="panel-header">
+    <h5>Курстар басқару</h5>
+    <span class="text-muted small">Барлығы: {{ course_count }}</span>
+  </div>
+  <div class="panel-body">
+    <div class="search-box mb-3">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" class="form-control" placeholder="Курс іздеу..." onkeyup="filterTable(this, 'courses-table')">
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table" id="courses-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Курс атауы</th>
+            <th>Оқытушы</th>
+            <th>Бағасы</th>
+            <th>Жарияланған</th>
+            <th>Құрылған күні</th>
+            <th>Әрекет</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+          <tr id="course-row-{{ c.id }}">
+            <td class="text-muted">{{ forloop.counter }}</td>
+            <td class="fw-semibold">{{ c.title }}</td>
+            <td class="text-muted">{{ c.teacher.user.full_name|default:c.teacher.user.username }}</td>
+            <td>{{ c.price }} ₸</td>
+            <td>
+              {% if c.is_published %}
+                <span class="badge rounded-pill badge-active">Иә</span>
+              {% else %}
+                <span class="badge rounded-pill badge-pending">Жоқ</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ c.created_at|date:"d.m.Y" }}</td>
+            <td>
+              <button class="btn-action btn-delete" onclick="deleteCourse({{ c.id }}, '{{ c.title|escapejs }}')">Жою</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-muted text-center py-4">Курстар жоқ</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 5. ТӨЛЕМДЕР ТАРИХЫ ═══════ -->
+<div class="admin-panel mb-4">
+  <div class="panel-header">
+    <h5>Төлемдер тарихы</h5>
+    <span class="text-muted small">Барлық төлемдер</span>
+  </div>
+  <div class="panel-body">
+    <div class="search-box mb-3">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" class="form-control" placeholder="Төлем іздеу..." onkeyup="filterTable(this, 'payments-table')">
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table" id="payments-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Студент</th>
+            <th>Курс</th>
+            <th class="text-end">Сома</th>
+            <th class="text-end">Күйі</th>
+            <th class="text-end">Күні</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in all_payments %}
+          <tr>
+            <td class="text-muted">{{ forloop.counter }}</td>
+            <td class="fw-semibold">{{ p.enrollment.student.full_name|default:p.enrollment.student.username }}</td>
+            <td>{{ p.enrollment.course.title }}</td>
+            <td class="text-end fw-semibold">{{ p.amount }} ₸</td>
+            <td class="text-end">
+              {% if p.status == "paid" %}
+                <span class="badge rounded-pill badge-paid">Төленді</span>
+              {% elif p.status == "pending" %}
+                <span class="badge rounded-pill badge-pending">Күтілуде</span>
+              {% else %}
+                <span class="badge rounded-pill badge-failed">Сәтсіз</span>
+              {% endif %}
+            </td>
+            <td class="text-end text-muted small">{{ p.created_at|date:"d.m.Y H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-muted text-center py-4">Төлем жазбалары жоқ</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 6. ПЛАТФОРМА ПАЙЫЗЫ ═══════ -->
+<div class="admin-panel mb-4">
+  <div class="panel-header">
+    <h5>Платформа пайызы</h5>
+    <span class="text-muted small">Табыс бөлінісі</span>
+  </div>
+  <div class="panel-body">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-6">
+        <div class="settings-card text-center">
+          <div class="mb-2 text-muted fw-semibold">Платформа үлесі</div>
+          <div class="fee-display" id="platformFeeDisplay">{{ platform_settings.platform_fee_percent }}%</div>
+          <input type="range" class="fee-slider mt-3" id="feeSlider"
+                 min="0" max="100" step="1"
+                 value="{{ platform_settings.platform_fee_percent }}"
+                 oninput="updateFeePreview(this.value)">
+          <div class="d-flex justify-content-between text-muted small mt-1">
+            <span>0%</span>
+            <span>100%</span>
+          </div>
+          <button class="btn btn-gradient px-4 py-2 mt-3" onclick="savePlatformFee()">Сақтау</button>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="settings-card text-center py-4">
+              <div class="text-muted fw-semibold mb-1 small">Платформа алады</div>
+              <div class="fs-2 fw-bold" style="color: #6C63FF;" id="platformShare">{{ platform_settings.platform_fee_percent }}%</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="settings-card text-center py-4">
+              <div class="text-muted fw-semibold mb-1 small">Оқытушы алады</div>
+              <div class="fs-2 fw-bold" style="color: #10B981;" id="teacherShare">{% widthratio platform_settings.platform_fee_percent 1 -1 as neg %}{{ neg }}<!-- fallback --></div>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card mt-3 p-3">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #6C63FF;"></div>
+            <span class="small text-muted">Платформа — әкімшілік, серверлер, маркетинг шығындарын жабады</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 mt-2">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #10B981;"></div>
+            <span class="small text-muted">Оқытушы — курс авторының табысы</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_labels|json_script:"admin-chart-labels" }}
+{{ chart_values|json_script:"admin-chart-values" }}
+
+<script>
+  const CSRF = '{{ csrf_token }}';
+  const platformFeeInitial = {{ platform_settings.platform_fee_percent }};
+
+  // ——— Init teacher share display ———
+  document.getElementById('teacherShare').textContent = (100 - platformFeeInitial) + '%';
+
+  // ——— Toast ———
+  function showToast(msg, isError) {
+    const t = document.getElementById('adminToast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    t.style.borderLeftColor = isError ? '#EF4444' : '#10B981';
+    t.style.borderLeft = '4px solid ' + (isError ? '#EF4444' : '#10B981');
+    t.style.animation = 'none';
+    void t.offsetWidth;
+    t.style.animation = 'slideIn 0.3s ease';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+
+  // ——— Revenue Chart ———
+  const labels = JSON.parse(document.getElementById('admin-chart-labels').textContent || '[]');
+  const values = JSON.parse(document.getElementById('admin-chart-values').textContent || '[]');
+  const ctx = document.getElementById('adminRevenueChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Табыс (₸)',
+          data: values,
+          backgroundColor: (context) => {
+            const chart = context.chart;
+            const {ctx: c, chartArea} = chart;
+            if (!chartArea) return 'rgba(108,99,255,0.3)';
+            const gradient = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, 'rgba(108,99,255,0.08)');
+            gradient.addColorStop(1, 'rgba(108,99,255,0.45)');
+            return gradient;
+          },
+          borderColor: '#6C63FF',
+          borderWidth: 2,
+          borderRadius: 12,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(31,41,64,0.9)',
+            cornerRadius: 10,
+            padding: 12,
+            callbacks: { label: (c) => c.parsed.y.toLocaleString() + ' ₸' }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { callback: v => v.toLocaleString() + ' ₸' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ——— Pie Chart ———
+  const pieCtx = document.getElementById('adminUserPieChart');
+  if (pieCtx) {
+    new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Студенттер', 'Оқытушылар'],
+        datasets: [{
+          data: [{{ student_count }}, {{ teacher_count }}],
+          backgroundColor: ['rgba(108,99,255,0.75)', 'rgba(255,101,132,0.75)'],
+          borderWidth: 0,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { weight: 600 } }
+          }
+        }
+      }
+    });
+  }
+
+  // ——— Tab switching ———
+  function switchUserTab(tab, btn) {
+    document.getElementById('tab-students').style.display = tab === 'students' ? '' : 'none';
+    document.getElementById('tab-teachers').style.display = tab === 'teachers' ? '' : 'none';
+    document.querySelectorAll('.tab-nav-admin .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // ——— Table search ———
+  function filterTable(input, tableId) {
+    const filter = input.value.toLowerCase();
+    const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+    });
+  }
+
+  // ——— Toggle user active status ———
+  function toggleUser(userId, btn) {
+    btn.disabled = true;
+    fetch(`/admin-dashboard/user/${userId}/toggle/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const badge = document.getElementById('badge-' + userId);
+        if (data.is_active) {
+          badge.className = 'badge rounded-pill badge-active';
+          badge.textContent = 'Белсенді';
+          btn.className = 'btn-action btn-block';
+          btn.textContent = 'Блоктау';
+        } else {
+          badge.className = 'badge rounded-pill badge-blocked';
+          badge.textContent = 'Блокталған';
+          btn.className = 'btn-action btn-activate';
+          btn.textContent = 'Белсендіру';
+        }
+        showToast(data.message, false);
+      } else {
+        showToast(data.error || 'Қате орын алды', true);
+      }
+    })
+    .catch(() => showToast('Серверге қосылу қатесі', true))
+    .finally(() => { btn.disabled = false; });
+  }
+
+  // ——— Delete course ———
+  function deleteCourse(courseId, title) {
+    if (!confirm(`"${title}" курсын жоюды растайсыз ба?`)) return;
+    fetch(`/admin-dashboard/course/${courseId}/delete/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const row = document.getElementById('course-row-' + courseId);
+        if (row) {
+          row.style.transition = 'opacity 0.3s ease';
+          row.style.opacity = '0';
+          setTimeout(() => row.remove(), 300);
+        }
+        showToast(data.message, false);
+      } else {
+        showToast(data.error || 'Қате орын алды', true);
+      }
+    })
+    .catch(() => showToast('Серверге қосылу қатесі', true));
+  }
+
+  // ——— Platform fee ———
+  function updateFeePreview(val) {
+    document.getElementById('platformFeeDisplay').textContent = val + '%';
+    document.getElementById('platformShare').textContent = val + '%';
+    document.getElementById('teacherShare').textContent = (100 - val) + '%';
+  }
+
+  function savePlatformFee() {
+    const fee = document.getElementById('feeSlider').value;
+    const formData = new FormData();
+    formData.append('platform_fee_percent', fee);
+    fetch('{% url "portal:admin_update_platform_settings" %}', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF },
+      body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        showToast(data.message, false);
+      } else {
+        showToast(data.error || 'Қате орын алды', true);
+      }
+    })
+    .catch(() => showToast('Серверге қосылу қатесі', true));
+  }
+</script>
+{% endblock %}

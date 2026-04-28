@@ -1,0 +1,179 @@
+{% extends "portal/base.html" %}
+
+{% block title %}Оқытушы панелі — Zerde{% endblock %}
+
+{% block content %}
+<div class="row g-4 align-items-stretch">
+  <div class="col-lg-4">
+    <div class="feature-card p-4 h-100">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle overflow-hidden border" style="width:72px;height:72px;">
+          {% if teacher_profile and teacher_profile.photo %}
+            <img src="{{ teacher_profile.photo }}" alt="Профиль" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+            <div class="h-100 w-100 d-flex align-items-center justify-content-center" style="background: rgba(108, 99, 255, 0.10); color: #6C63FF; font-weight: 800;">
+              {{ request.user.full_name|default:request.user.username|slice:":1" }}
+            </div>
+          {% endif %}
+        </div>
+        <div>
+          <div class="fw-bold fs-5 mb-1">{{ request.user.full_name|default:request.user.username }}</div>
+          <div class="text-muted small">Мамандық: {{ request.user.major|default:"Көрсетілмеген" }}</div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="d-grid gap-2">
+        <a class="btn btn-gradient py-3" href="{% url 'portal:teacher_course_add' %}">Жаңа курс қосу</a>
+        <a class="btn btn-soft py-3" href="{% url 'portal:teacher_lesson_add' %}">Сабақ қосу</a>
+        <a class="btn btn-soft py-3" href="{% url 'portal:teacher_profile' %}">Профильді ашу</a>
+        <a class="btn btn-soft py-3" href="{% url 'portal:home' %}">Басты бетке қайту</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="feature-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="text-muted fw-semibold">Жалпы студент саны</div>
+              <div class="display-6 fw-bold mb-0">{{ total_students }}</div>
+            </div>
+            <div class="brand-badge">S</div>
+          </div>
+          <div class="text-muted small mt-2">Сіздің курстарыңызға жазылған бірегей студенттер.</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="feature-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="text-muted fw-semibold">Жалпы табыс</div>
+              <div class="display-6 fw-bold mb-0">{{ total_revenue }} ₸</div>
+            </div>
+            <div class="brand-badge">₸</div>
+          </div>
+          <div class="text-muted small mt-2">Тек төленген транзакциялар есептелді.</div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="feature-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <div class="fw-bold fs-5">Табыс динамикасы</div>
+              <div class="text-muted small">Соңғы айлар бойынша төлемдер статистикасы.</div>
+            </div>
+          </div>
+          <div style="height: 280px;">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <div class="section-title fs-3">Менің курстарым</div>
+      <div class="text-muted">Курстарыңызды карточка түрінде көріңіз.</div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    {% for course in courses %}
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card p-4 h-100 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start">
+            <a href="{% url 'portal:student_course_detail' course.id %}" class="fw-bold teacher-course-link">{{ course.title }}</a>
+            {% if course.is_published %}
+              <span class="badge rounded-pill text-bg-success">Жарияланған</span>
+            {% else %}
+              <span class="badge rounded-pill text-bg-secondary">Жоба</span>
+            {% endif %}
+          </div>
+          <p class="text-muted small mt-2 mb-4">
+            {{ course.description|default:"Сипаттама жоқ."|truncatechars:120 }}
+          </p>
+          <div class="d-flex justify-content-between align-items-center mt-auto">
+            <div class="fw-semibold">{{ course.price }} ₸</div>
+            <div class="d-flex gap-2">
+              <a class="btn btn-soft" href="{% url 'portal:teacher_course_edit' course.id %}">Өңдеу</a>
+              <a class="btn btn-gradient" href="{% url 'portal:teacher_course_test_add' course.id %}">
+                {% if course.id in course_test_ids %}Тестті өзгерту{% else %}Тест қосу{% endif %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-info border-0 rounded-4 shadow-sm">
+          Әзірге курс жоқ. Жоғарыдағы батырма арқылы жаңа курс қосыңыз.
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .teacher-course-link {
+    color: #6C63FF;
+    text-decoration: none;
+    transition: transform 0.3s ease, opacity 0.3s ease, color 0.3s ease;
+    display: inline-block;
+  }
+  .teacher-course-link:hover {
+    color: #5b52ee;
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_labels|json_script:"teacher-chart-labels" }}
+{{ chart_values|json_script:"teacher-chart-values" }}
+<script>
+  const labels = JSON.parse(document.getElementById('teacher-chart-labels').textContent || "[]");
+  const values = JSON.parse(document.getElementById('teacher-chart-values').textContent || "[]");
+
+  const ctx = document.getElementById('revenueChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Табыс (₸)',
+          data: values,
+          borderColor: '#6C63FF',
+          backgroundColor: 'rgba(108, 99, 255, 0.15)',
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: '#6C63FF'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true }
+        },
+        scales: {
+          y: { ticks: { callback: (v) => `${v} ₸` } }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}
+
