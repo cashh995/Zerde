@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import authenticate
 
@@ -26,9 +28,15 @@ class StudentRegistrationForm(StyledFormMixin, forms.ModelForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data["email"].lower()
+        email = self.cleaned_data["email"].strip().lower()
+        if " " in email:
+            raise forms.ValidationError("Email-де бос орын болмауы керек.")
+        if "@" not in email:
+            raise forms.ValidationError("Email-де @ белгісі болуы керек.")
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$", email):
+            raise forms.ValidationError("Email форматы дұрыс емес. Домені болуы керек (мысалы: .com, .kz, .ru).")
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("Бұл email бойынша қолданушы бұрыннан тіркелген.")
+            raise forms.ValidationError("Бұл email бұрыннан тіркелген.")
         return email
 
 
@@ -45,9 +53,15 @@ class TeacherRegistrationForm(StyledFormMixin, forms.ModelForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data["email"].lower()
+        email = self.cleaned_data["email"].strip().lower()
+        if " " in email:
+            raise forms.ValidationError("Email-де бос орын болмауы керек.")
+        if "@" not in email:
+            raise forms.ValidationError("Email-де @ белгісі болуы керек.")
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$", email):
+            raise forms.ValidationError("Email форматы дұрыс емес. Домені болуы керек (мысалы: .com, .kz, .ru).")
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("Бұл email бойынша қолданушы бұрыннан тіркелген.")
+            raise forms.ValidationError("Бұл email бұрыннан тіркелген.")
         return email
 
 
