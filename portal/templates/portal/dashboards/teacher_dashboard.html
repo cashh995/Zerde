@@ -26,7 +26,6 @@
 
       <div class="d-grid gap-2">
         <a class="btn btn-gradient py-3" href="{% url 'portal:teacher_course_add' %}">Жаңа курс қосу</a>
-        <a class="btn btn-soft py-3" href="{% url 'portal:teacher_lesson_add' %}">Сабақ қосу</a>
         <a class="btn btn-soft py-3" href="{% url 'portal:teacher_profile' %}">Профильді ашу</a>
         <a class="btn btn-soft py-3" href="{% url 'portal:home' %}">Басты бетке қайту</a>
       </div>
@@ -101,8 +100,8 @@
           </p>
           <div class="d-flex justify-content-between align-items-center mt-auto">
             <div class="fw-semibold">{{ course.price }} ₸</div>
-            <div class="d-flex gap-2">
-              <a class="btn btn-soft" href="{% url 'portal:teacher_course_edit' course.id %}">Өңдеу</a>
+            <div class="d-flex gap-2 flex-wrap">
+              <a class="btn btn-soft" href="{% url 'portal:teacher_course_lessons' course.id %}">Сабақтар</a>
               <a class="btn btn-gradient" href="{% url 'portal:teacher_course_test_add' course.id %}">
                 {% if course.id in course_test_ids %}Тестті өзгерту{% else %}Тест қосу{% endif %}
               </a>

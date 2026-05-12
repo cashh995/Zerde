@@ -19,6 +19,8 @@ urlpatterns = [
     path("admin-dashboard/platform-settings/", views.admin_update_platform_settings, name="admin_update_platform_settings"),
     path("teacher/course/add/", views.teacher_course_add, name="teacher_course_add"),
     path("teacher/course/<int:course_id>/edit/", views.teacher_course_edit, name="teacher_course_edit"),
+    path("teacher/course/<int:course_id>/lessons/", views.teacher_course_lessons, name="teacher_course_lessons"),
+    path("teacher/course/<int:course_id>/lessons/add/", views.teacher_course_lesson_add, name="teacher_course_lesson_add"),
     path(
         "teacher/course/<int:course_id>/test/add/",
         views.teacher_course_test_add,

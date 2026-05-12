@@ -759,6 +759,117 @@ def teacher_profile_edit(request):
 
 
 @login_required
+def teacher_course_lessons(request, course_id):
+    if request.user.role != User.Role.TEACHER:
+        return redirect("portal:role_redirect")
+
+    teacher_profile = TeacherProfile.objects.filter(user=request.user).first()
+    if teacher_profile is None:
+        messages.error(request, "Алдымен оқытушы профиліңізді толтырыңыз.")
+        return redirect("portal:teacher_dashboard")
+
+    course = Course.objects.filter(id=course_id, teacher=teacher_profile).first()
+    if course is None:
+        messages.error(request, "Бұл курсты өңдеуге рұқсатыңыз жоқ.")
+        return redirect("portal:teacher_dashboard")
+
+    lessons = course.lessons.order_by("order")
+
+    if request.method == "POST":
+        form = TeacherCourseEditForm(request.POST, request.FILES, instance=course)
+        if form.is_valid():
+            course = form.save(commit=False)
+
+            category_label = dict(TeacherCourseEditForm.CATEGORY_CHOICES).get(
+                form.cleaned_data["category"], "Басқа"
+            )
+            image_file = form.cleaned_data.get("course_image")
+
+            base_description_lines = []
+            for line in (course.description or "").splitlines():
+                if line.startswith("Категория:"):
+                    continue
+                if line.startswith("Курс суреті:"):
+                    continue
+                base_description_lines.append(line)
+
+            base_description = "\n".join(base_description_lines).strip()
+            extra_lines = [f"Категория: {category_label}"]
+            if image_file:
+                course.image = image_file
+                extra_lines.append(f"Курс суреті: {image_file.name}")
+            elif course.image:
+                extra_lines.append(f"Курс суреті: {course.image.name.split('/')[-1]}")
+
+            extra_block = "\n".join(extra_lines)
+            course.description = (
+                f"{base_description}\n\n{extra_block}" if base_description else extra_block
+            )
+
+            course.save()
+            messages.success(request, "Курс мәліметтері сәтті жаңартылды.")
+            return redirect("portal:teacher_course_lessons", course_id=course.id)
+    else:
+        form = TeacherCourseEditForm(instance=course)
+
+    return render(
+        request,
+        "portal/teacher_course_lessons.html",
+        {
+            "form": form,
+            "course": course,
+            "lessons": lessons,
+            "page_title": f"{course.title} — Сабақтар",
+        },
+    )
+
+
+@login_required
+def teacher_course_lesson_add(request, course_id):
+    if request.user.role != User.Role.TEACHER:
+        return redirect("portal:role_redirect")
+
+    teacher_profile = TeacherProfile.objects.filter(user=request.user).first()
+    if teacher_profile is None:
+        messages.error(request, "Алдымен оқытушы профилін жасаңыз.")
+        return redirect("portal:teacher_profile_edit")
+
+    course = Course.objects.filter(id=course_id, teacher=teacher_profile).first()
+    if course is None:
+        messages.error(request, "Бұл курсқа сабақ қосуға рұқсатыңыз жоқ.")
+        return redirect("portal:teacher_dashboard")
+
+    if request.method == "POST":
+        form = TeacherLessonCreateForm(
+            request.POST, request.FILES, teacher_profile=teacher_profile
+        )
+        form.fields.pop("course", None)
+        if form.is_valid():
+            lesson = form.save(commit=False)
+            lesson.course = course
+            last_order = (
+                Lesson.objects.filter(course=course).aggregate(max_o=Max("order"))["max_o"] or 0
+            )
+            lesson.order = max(lesson.order, (last_order + 1))
+            lesson.save()
+            messages.success(request, "Жаңа сабақ сәтті қосылды.")
+            return redirect("portal:teacher_course_lessons", course_id=course.id)
+    else:
+        form = TeacherLessonCreateForm(teacher_profile=teacher_profile)
+        form.fields.pop("course", None)
+
+    return render(
+        request,
+        "portal/teacher_course_lesson_add.html",
+        {
+            "form": form,
+            "course": course,
+            "page_title": f"{course.title} — Сабақ қосу",
+        },
+    )
+
+
+@login_required
 def teacher_lesson_add(request):
     if request.user.role != User.Role.TEACHER:
         return redirect("portal:role_redirect")
