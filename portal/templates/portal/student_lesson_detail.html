@@ -39,6 +39,7 @@
           Видео көру
         </a>
       {% endif %}
+      {% if request.user.role == 'student' %}
       <form method="post" action="{% url 'portal:complete_lesson' course.id lesson.id %}" class="mt-3">
         {% csrf_token %}
         <button type="submit" class="btn btn-soft px-4">
@@ -49,6 +50,7 @@
           {% endif %}
         </button>
       </form>
+      {% endif %}
       {% if can_take_test %}
         <div class="mt-3">
           <a href="{% url 'portal:student_course_test' course.id %}" class="btn btn-gradient px-4">
