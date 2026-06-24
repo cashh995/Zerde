@@ -15,12 +15,12 @@
                 <form class="mb-4" role="search" method="get" action="{% url 'portal:home' %}">
                     <div class="input-group input-group-lg shadow-sm">
                         <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Курс іздеу: Python, Django, Data Science..." aria-label="Курс іздеу">
-                        <button class="btn btn-gradient px-4" type="submit">Іздеу</button>
+                        <button class="btn btn-gradient px-4" type="submit"><i class="bi bi-search me-1"></i>Іздеу</button>
                     </div>
                 </form>
                 <div class="d-flex flex-column flex-sm-row gap-3">
-                    <a href="{% url 'portal:register_student' %}" class="btn btn-gradient btn-lg px-4">Студент ретінде бастау</a>
-                    <a href="{% url 'portal:register_teacher' %}" class="btn btn-soft btn-lg px-4">Оқытушы ретінде қосылу</a>
+                    <a href="{% url 'portal:register_student' %}" class="btn btn-gradient btn-lg px-4"><i class="bi bi-person-plus me-1"></i>Студент ретінде бастау</a>
+                    <a href="{% url 'portal:register_teacher' %}" class="btn btn-soft btn-lg px-4"><i class="bi bi-person-badge me-1"></i>Оқытушы ретінде қосылу</a>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 {% else %}
                     <div class="bg-white bg-opacity-10 rounded-4 p-4">
                         <div class="fw-semibold mb-1">Аккаунтыңыз бар ма?</div>
-                        <a href="{% url 'portal:login' %}" class="btn btn-light text-dark fw-semibold rounded-pill px-4 mt-2">Жүйеге кіру</a>
+                        <a href="{% url 'portal:login' %}" class="btn btn-light text-dark fw-semibold rounded-pill px-4 mt-2"><i class="bi bi-box-arrow-in-right me-1"></i>Жүйеге кіру</a>
                     </div>
                 {% endif %}
             </div>
@@ -67,9 +67,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="fw-semibold text-primary">{{ course.price }} ₸</span>
                         {% if request.user.is_authenticated and request.user.role == 'student' %}
-                            <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft">Көру</a>
+                            <a href="{% url 'portal:student_course_detail' course.id %}" class="btn btn-soft"><i class="bi bi-eye me-1"></i>Көру</a>
                         {% else %}
-                            <a href="{% url 'portal:login' %}" class="btn btn-soft">Кіру</a>
+                            <a href="{% url 'portal:login' %}" class="btn btn-soft"><i class="bi bi-box-arrow-in-right me-1"></i>Кіру</a>
                         {% endif %}
                     </div>
                 </div>

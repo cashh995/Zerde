@@ -293,3 +293,52 @@ class TeacherCourseEditForm(StyledFormMixin, forms.ModelForm):
         if cleaned_data.get("is_free"):
             cleaned_data["price"] = 0
         return cleaned_data
+
+
+class StudentProfileEditForm(StyledFormMixin, forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("full_name", "email", "major", "group_name")
+        labels = {
+            "full_name": "Аты-жөні",
+            "email": "Email",
+            "major": "Мамандығы",
+            "group_name": "Тобы",
+        }
+
+
+class TeacherLessonEditForm(StyledFormMixin, forms.ModelForm):
+    remove_image = forms.BooleanField(label="Суретті өшіру", required=False)
+    remove_video = forms.BooleanField(label="Видеоны өшіру", required=False)
+
+    class Meta:
+        model = Lesson
+        fields = ("title", "content", "video_url", "image")
+        labels = {
+            "title": "Сабақ атауы",
+            "content": "Сабақ мәтіні",
+            "video_url": "Видео URL",
+            "image": "Жаңа сурет",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["content"].widget.attrs["rows"] = 6
+        self.fields["video_url"].required = False
+        self.fields["image"].required = False
+        self.fields["remove_image"].widget.attrs["class"] = "form-check-input"
+        self.fields["remove_video"].widget.attrs["class"] = "form-check-input"
+        
+        if "image" in self.fields:
+            self.fields["image"].widget.initial_text = ""
+            self.fields["image"].widget.clear_checkbox_label = ""
+
+    def save(self, commit=True):
+        lesson = super().save(commit=False)
+        if self.cleaned_data.get("remove_image") and not self.cleaned_data.get("image"):
+            lesson.image = None
+        if self.cleaned_data.get("remove_video"):
+            lesson.video_url = ""
+        if commit:
+            lesson.save()
+        return lesson        

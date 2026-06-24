@@ -35,10 +35,35 @@
       <div class="text-secondary mb-4">{{ lesson.content|default:"Сабақ мәтіні әлі толтырылмаған."|linebreaksbr }}</div>
 
       {% if lesson.video_url %}
-        <a href="{{ lesson.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-gradient px-4">
-          Видео көру
-        </a>
-      {% endif %}
+  <div class="mb-4 rounded-4 overflow-hidden" style="background:#000;">
+    {% if "youtube.com/watch" in lesson.video_url %}
+      <div class="ratio ratio-16x9">
+        <iframe
+          src="https://www.youtube.com/embed/{{ lesson.video_url|cut:'https://www.youtube.com/watch?v=' }}"
+          title="{{ lesson.title }}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    {% elif "youtu.be/" in lesson.video_url %}
+      <div class="ratio ratio-16x9">
+        <iframe
+          src="https://www.youtube.com/embed/{{ lesson.video_url|cut:'https://youtu.be/' }}"
+          title="{{ lesson.title }}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    {% else %}
+      <video controls class="w-100" style="max-height:480px;">
+        <source src="{{ lesson.video_url }}">
+        Сіздің браузеріңіз видеоны қолдамайды.
+      </video>
+    {% endif %}
+  </div>
+{% endif %}
       {% if request.user.role == 'student' %}
       <form method="post" action="{% url 'portal:complete_lesson' course.id lesson.id %}" class="mt-3">
         {% csrf_token %}

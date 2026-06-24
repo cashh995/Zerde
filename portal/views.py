@@ -29,6 +29,8 @@ from .forms import (
     PaymentForm,
     TeacherCourseEditForm,
     StudentRegistrationForm,
+    StudentProfileEditForm,
+    TeacherLessonEditForm,
     TeacherCourseCreateForm,
     TeacherLessonCreateForm,
     TeacherProfileEditForm,
@@ -759,6 +761,25 @@ def teacher_profile_edit(request):
 
 
 @login_required
+def student_profile_edit(request):
+    if request.user.role != User.Role.STUDENT:
+        return redirect("portal:role_redirect")
+    if request.method == "POST":
+        form = StudentProfileEditForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Профиль сәтті жаңартылды.")
+            return redirect("portal:student_dashboard")
+    else:
+        form = StudentProfileEditForm(instance=request.user)
+    return render(
+        request,
+        "portal/student_profile_edit.html",
+        {"form": form, "page_title": "Профильді өзгерту"},
+    )
+
+
+@login_required
 def teacher_course_lessons(request, course_id):
     if request.user.role != User.Role.TEACHER:
         return redirect("portal:role_redirect")
@@ -866,6 +887,39 @@ def teacher_course_lesson_add(request, course_id):
             "course": course,
             "page_title": f"{course.title} — Сабақ қосу",
         },
+    )
+
+
+@login_required
+def teacher_lesson_edit(request, course_id, lesson_id):
+    if request.user.role != User.Role.TEACHER:
+        return redirect("portal:role_redirect")
+        
+    teacher_profile = TeacherProfile.objects.filter(user=request.user).first()
+    if teacher_profile is None:
+        messages.error(request, "Алдымен оқытушы профиліңізді толтырыңыз.")
+        return redirect("portal:teacher_dashboard")
+        
+    course = Course.objects.filter(id=course_id, teacher=teacher_profile).first()
+    if course is None:
+        messages.error(request, "Бұл курсты өңдеуге рұқсатыңыз жоқ.")
+        return redirect("portal:teacher_dashboard")
+        
+    lesson = get_object_or_404(Lesson, id=lesson_id, course=course)
+    
+    if request.method == "POST":
+        form = TeacherLessonEditForm(request.POST, request.FILES, instance=lesson)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Сабақ сәтті жаңартылды.")
+            return redirect("portal:teacher_course_lessons", course_id=course.id)
+    else:
+        form = TeacherLessonEditForm(instance=lesson)
+        
+    return render(
+        request,
+        "portal/teacher_lesson_edit.html",
+        {"form": form, "course": course, "lesson": lesson, "page_title": f"{lesson.title} — Өңдеу"},
     )
 
 

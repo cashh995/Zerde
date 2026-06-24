@@ -16,6 +16,7 @@
           <div class="fw-bold fs-5 mb-1">{{ request.user.full_name|default:request.user.username }}</div>
           <div class="text-muted small">Мамандығы: {{ request.user.major|default:"Көрсетілмеген" }}</div>
           <div class="text-muted small">Тобы: {{ request.user.group_name|default:"Көрсетілмеген" }}</div>
+          <a href="{% url 'portal:student_profile_edit' %}" class="small text-decoration-underline" style="color: #6C63FF;">Профильді өзгерту</a>
         </div>
       </div>
 

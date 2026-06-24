@@ -21,6 +21,7 @@ urlpatterns = [
     path("teacher/course/<int:course_id>/edit/", views.teacher_course_edit, name="teacher_course_edit"),
     path("teacher/course/<int:course_id>/lessons/", views.teacher_course_lessons, name="teacher_course_lessons"),
     path("teacher/course/<int:course_id>/lessons/add/", views.teacher_course_lesson_add, name="teacher_course_lesson_add"),
+    path("teacher/course/<int:course_id>/lessons/<int:lesson_id>/edit/", views.teacher_lesson_edit, name="teacher_lesson_edit"),
     path(
         "teacher/course/<int:course_id>/test/add/",
         views.teacher_course_test_add,
@@ -28,6 +29,7 @@ urlpatterns = [
     ),
     path("teacher/profile/", views.teacher_profile, name="teacher_profile"),
     path("teacher/profile/edit/", views.teacher_profile_edit, name="teacher_profile_edit"),
+    path("student/profile/edit/", views.student_profile_edit, name="student_profile_edit"),
     path("teacher/lesson/add/", views.teacher_lesson_add, name="teacher_lesson_add"),
     path("courses/", views.student_courses, name="student_courses"),
     path("courses/<int:course_id>/", views.student_course_detail, name="student_course_detail"),

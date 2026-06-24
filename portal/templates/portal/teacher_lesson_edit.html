@@ -1,0 +1,80 @@
+{% extends 'portal/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-secondary mb-2">{{ course.title }}</span>
+            <h2>Сабақты өңдеу: {{ lesson.title }}</h2>
+        </div>
+        <a href="{% url 'portal:teacher_course_lessons' course.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Артқа қайту
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        {% if field.name != 'remove_image' and field.name != 'remove_video' %}
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                        {% endif %}
+
+                        {# Егер сурет өрісі болса, Django-ның стандартты мәтіндерінсіз, тек таза батырманы шығару #}
+                        {% if field.name == 'image' %}
+                            <input type="file" name="image" accept="image/*" class="form-control">
+                            
+                            {% if lesson.image %}
+                                <div class="mt-3 p-2 border rounded bg-light" style="max-width: 200px;">
+                                    <p class="small text-muted mb-1">Қазіргі жүктелген сурет:</p>
+                                    <img src="{{ lesson.image.url }}" class="img-fluid rounded" alt="Сабақ суреті">
+                                </div>
+                            {% endif %}
+
+                        {# Егер өшіру жалаушалары (checkbox) болса, оларды әдемі қатар қылып шығару #}
+                        {% elif field.name == 'remove_image' or field.name == 'remove_video' %}
+                            <div class="form-check form-switch mt-2">
+                                {{ field }}
+                                <label class="form-check-label text-danger fw-bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+
+                        {% else %}
+                            {# Қалған қарапайым өрістерді (мәтін, атауы) қалыпты шығару #}
+                            {{ field }}
+                        {% endif %}
+
+                        {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors }}</div>
+                        {% endif %}
+                        
+                        {% if field.name == 'video_url' and lesson.video_url %}
+                            <div class="mt-3">
+                                <div class="small text-muted mb-2">
+                                    <strong>Қазіргі видео сілтемесі:</strong> 
+                                    <a href="{{ lesson.video_url }}" target="_blank">{{ lesson.video_url }}</a>
+                                </div>
+                                
+                                {# Егер сілтеме YouTube болса, оны осы жерде видео қылып ашып көрсету #}
+                                {% if "youtu" in lesson.video_url %}
+                                    <div class="ratio ratio-16x9 mt-2 rounded shadow-sm overflow-hidden" style="max-width: 450px;">
+                                        <iframe src="https://www.youtube.com/embed/{{ lesson.video_url|slice:'-11:' }}" title="YouTube video" allowfullscreen></iframe>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bg-check-circle"></i> Өзгерістерді сақтау
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

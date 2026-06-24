@@ -29,7 +29,7 @@
                     <form method="post" novalidate>
                         {% csrf_token %}
                         {% include "portal/auth/partials/form_fields.html" %}
-                        <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold">Студент болып тіркелу</button>
+                        <button type="submit" class="btn btn-gradient w-100 py-3 fw-semibold"><i class="bi bi-person-plus me-1"></i>Студент болып тіркелу</button>
                     </form>
                     <p class="text-secondary mt-4 mb-0">
                         Аккаунтыңыз бар ма? <a href="{% url 'portal:login' %}" class="fw-semibold">Жүйеге кіріңіз</a>
